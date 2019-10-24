@@ -13,6 +13,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -37,13 +39,10 @@ public class ChatClient extends Frame {
     TextField textField = new TextField();
     /** 聊天信息显示框 */
     TextArea textArea = new TextArea();
-    /** 客户端 */
-    Socket chatSocket = null;
-    InputStreamReader insReader = null;
-    BufferedReader bufferedReader = null;
-    OutputStreamWriter outsWriter = null;
-    BufferedWriter bufferedWriter = null;
-    String words = null;
+    /** 聊天客户端 */
+    Socket socket = null;
+    /** 开始聊天 */
+    boolean start = false;
     /**
      * @Fields field:
      */
@@ -69,25 +68,47 @@ public class ChatClient extends Frame {
         textArea.setBackground(Color.PINK);
         add(textField, BorderLayout.SOUTH);
         add(textArea, BorderLayout.NORTH);
+        
+        this.addWindowListener(new WindowAdapter() {
+
+            public void windowClosing(WindowEvent e) {
+                try {
+                    socket.close();
+                } catch (IOException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+                System.exit(0);
+            }
+            
+        });
+        
         textField.addKeyListener(new TextKeyListener());
+        
         pack();
         setVisible(true);
         
+        connect();
+        
+        while (start) {
+            try {
+                DataInputStream dis = new DataInputStream(socket.getInputStream());
+                String words = dis.readUTF();
+                textArea.append("Server:\n" + "  " + words + "\n");
+                dis.close();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
+    }
+    
+    public void connect() {
         try {
-            chatSocket = new Socket("127.0.0.1", 8888);
-            insReader = new InputStreamReader(chatSocket.getInputStream());
-            bufferedReader = new BufferedReader(insReader);
-            outsWriter = new OutputStreamWriter(chatSocket.getOutputStream());
-            bufferedWriter = new BufferedWriter(outsWriter);
+            socket = new Socket("127.0.0.1", 8888);
+            start = true;
         } catch (IOException ec) {
             ec.printStackTrace();
         }
-        
-        this.addWindowListener(new WindowAdapter() {
-           public void  windowClosing(WindowEvent e) {
-               System.exit(0);
-           }
-        });
     }
     
     private class TextKeyListener extends KeyAdapter {
@@ -95,45 +116,22 @@ public class ChatClient extends Frame {
         @Override
         public void keyPressed(KeyEvent e) {
             if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                words = textField.getText();
+                String words = textField.getText();
                     
                 if (words != null) {
                     textArea.append("Gui:\n" + "  " + words + "\n");
                     textField.setText("");
-                    while (words != null) {
-                        try {
-                            bufferedWriter.write(words + "\n");
-                        } catch (IOException e1) {
-                            // TODO Auto-generated catch block
-                            e1.printStackTrace();
-                        }
-                        try {
-                            bufferedWriter.flush();
-                        } catch (IOException e1) {
-                            // TODO Auto-generated catch block
-                            e1.printStackTrace();
-                        }
-                        try {
-                            textArea.append("Server:\n" + "  " + bufferedReader.readLine() + "\n");
-                        } catch (IOException e1) {
-                            // TODO Auto-generated catch block
-                            e1.printStackTrace();
-                        }
-                    }
                     
                     try {
-                        chatSocket.close();
-                        insReader.close();
-                        bufferedReader.close();
-                        outsWriter.close();
-                        bufferedWriter.close();
+                        DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+                        dos.writeUTF(words);
+                        dos.flush();
                     } catch (IOException e1) {
-                        // TODO Auto-generated catch block
                         e1.printStackTrace();
                     }
-
                 }
             }
         }
     }
 }
+

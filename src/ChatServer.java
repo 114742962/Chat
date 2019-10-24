@@ -1,5 +1,7 @@
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -43,36 +45,24 @@ public class ChatServer {
         Socket chatSocket = null;
         
         try {
-            chatServerSocket = new ServerSocket(8888);
-            chatSocket = chatServerSocket.accept();
-            BufferedReader inputReader = new BufferedReader(new InputStreamReader(System.in));
-            InputStreamReader insReader = new InputStreamReader(chatSocket.getInputStream());
-            BufferedReader bufferedReader = new BufferedReader(insReader);
-            OutputStreamWriter outsWriter = new OutputStreamWriter(chatSocket.getOutputStream());
-            BufferedWriter bufferedWriter = new BufferedWriter(outsWriter);
-            System.out.println("Gui:  " + bufferedReader.readLine());
-            String words = inputReader.readLine();
-            
-            while (!words.equals("bye")) {
-                // 如果不加换行符对方读不到信息
-                bufferedWriter.write(words+ "\n");
-                bufferedWriter.flush();
-                System.out.println("Server:  " + words);
-                System.out.println("Gui:  " + inputReader.readLine());
-                words = bufferedReader.readLine();
+            while (true) {
+                boolean isConnect = false;
+                chatServerSocket = new ServerSocket(8888);
+                chatSocket = chatServerSocket.accept();
+                System.out.println("A client connect!");
+                isConnect = true;
+                DataInputStream dis = new DataInputStream(chatSocket.getInputStream());
+                DataOutputStream dos = new DataOutputStream(chatSocket.getOutputStream());
+                
+                while (isConnect) {
+                    System.out.println("Gui:  " + dis.readUTF());
+                }
+                
+                dis.close();
+                dos.close();
             }
-            
-            chatSocket.close();
-            insReader.close();
-            bufferedReader.close();
-            outsWriter.close();
-            bufferedWriter.close();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        
-        
-        
     }
 }

@@ -84,6 +84,7 @@ public class ChatServer extends Frame{
         
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
+                endServer();
                 System.exit(0);
             }
         });
@@ -160,7 +161,7 @@ public class ChatServer extends Frame{
 
         public void keyPressed(KeyEvent e) {
             if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                String newWords = textField.getText();
+                String newWords = textField.getText().trim();
                 textArea.append("Server:\n" + "  " + newWords + "\n");
                 textField.setText("");
                 

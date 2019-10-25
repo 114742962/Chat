@@ -71,6 +71,7 @@ public class ChatClient extends Frame {
         
         this.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
+                disConnect();
                 System.exit(0);
             }
         });
@@ -115,6 +116,7 @@ public class ChatClient extends Frame {
         try {
             dis.close();
             dos.close();
+            socket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -139,7 +141,7 @@ public class ChatClient extends Frame {
         @Override
         public void keyPressed(KeyEvent e) {
             if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                String newWords = textField.getText();
+                String newWords = textField.getText().trim();
                 textArea.append("Gui:\n" + "  " + newWords + "\n");
                 textField.setText("");    
                 try {
